@@ -1,7 +1,8 @@
 use std::{borrow::Borrow, sync::LazyLock};
 
 use genanki_rs::{basic_model, Deck, Note};
-use regex::Regex;
+use katex::Opts;
+use regex::{Captures, Regex};
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct Config {
@@ -18,22 +19,41 @@ fn read_config() -> Config {
 }
 
 fn remove_links(input: String) -> String {
-    static LINK_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"(\[|\])"#).unwrap());
+    static LINK_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"(\[{2}.*\]{2})"#).unwrap());
     let link_regex = LINK_REGEX.clone();
     link_regex.replace_all(&input, "").into_owned()
 }
 
 fn replace_math(input: String) -> String {
     static MATH_REGEX_DOUBLE: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r#"(\${2})(?<content>.*)(\${2})"#).unwrap());
-    static MATHE_REGEX_SINGLE: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r#"(\$)(?<content>.*)(\$)"#).unwrap());
+        LazyLock::new(|| Regex::new(r#"(\${2})(?<content>.*?)(\${2})"#).unwrap());
+    static MATH_REGEX_SINGLE: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r#"(\$)(?<content>.*?)(\$)"#).unwrap());
+    static MATH_NUMBER: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r#"\\(?<symbol>[A-Z]+)"#).unwrap());
     let double = MATH_REGEX_DOUBLE.clone();
-    let single = MATHE_REGEX_SINGLE.clone();
-    let replaced_double = double.replace_all(&input, r#"\[$content\]"#);
-    single
-        .replace_all(&replaced_double, r#"\($content\)"#)
-        .into_owned()
+    let single = MATH_REGEX_SINGLE.clone();
+    let number = MATH_NUMBER.clone();
+    // static OPTS: LazyLock<Opts> =
+    // LazyLock::new(|| Opts::builder().display_mode(true).build().unwrap());
+    let replaced_double = double
+        .replace_all(&input, |caps: &Captures| {
+            // println!("At capture {}", caps.name("content").unwrap().as_str());
+            let content = caps.name("content").unwrap();
+            // katex::render_with_opts(&content.as_str(), &OPTS.clone()).unwrap()
+            format!("\\[{}\\]", content.as_str())
+        })
+        .into_owned();
+    let single_replaced = single
+        .replace_all(&replaced_double, |caps: &Captures| {
+            // println!("At capture {}", caps.name("content").unwrap().as_str());
+            let content = caps.name("content").unwrap();
+            // katex::render_with_opts(&content.as_str(), &OPTS.clone()).unwrap()
+            format!("\\({}\\)", content.as_str())
+        })
+        .into_owned();
+    let number_symbol_replaced = number.replace_all(&single_replaced, "\\mathbb{$symbol}");
+    number_symbol_replaced.to_string()
 }
 
 // Read config.
