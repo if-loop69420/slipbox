@@ -67,7 +67,7 @@ fn main() {
         let path = i.unwrap().path();
         println!(
             "Reading file: {}",
-            path.clone().into_os_string().into_string().unwrap()
+            path.display()
         );
         let file_content = std::fs::read_to_string(path).unwrap();
         let (title, body) = file_content.split_once('\n').unwrap();
