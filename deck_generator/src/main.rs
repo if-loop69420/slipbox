@@ -115,9 +115,14 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    use crate::Note;
+
     #[test]
     fn test_simple_note() {
         let data = include_str!("../test_data/20240910102356.md");
-        // let note = parse_markdown(&data);
+        let note: Note = data.parse().unwrap();
+        assert_eq!(note.title, "<p>What is a proof?</p>");
+        assert_eq!(note.body, "<p>A proof is a formal way of expressing a statement to be true based on logic  and reasoning.\nFor this purpose proofs make use of axioms  on which they base their reasoning.</p>\n<p>&quot;Mathematics as a field of science tries to scientifically prove the most facts about the universe while using the smallest possible number of axioms&quot; - Einstein (probably not a word for word quote)</p>\n");
+        assert_eq!(note.tags, vec!["math", "proofs", "logic"]);
     }
 }
