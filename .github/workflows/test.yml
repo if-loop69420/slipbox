@@ -1,0 +1,21 @@
+name: Test deck generator
+
+on:
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4.1.0
+        with:
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('deck_generator/*') }}
+          path: |
+            */target/
+      - name: Run tests
+        run: cd deck_generator && cargo test
