@@ -1,6 +1,7 @@
 use std::sync::LazyLock;
 
 use genanki_rs::{basic_model, Deck, Note};
+use markdown::Options;
 use regex::{Captures, Regex};
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -66,6 +67,7 @@ fn main() {
     let mut deck = Deck::new(config.deck_id, &config.deck_name, &config.deck_description);
     let title_regex = Regex::new(r"^#\s+").unwrap();
     let tag_regex = Regex::new(r"#(?<tag>[^#\s]+)").unwrap();
+    let options = Options::gfm();
     for i in std::fs::read_dir(config.input_dir).unwrap() {
         let path = i.unwrap().path();
         println!(
@@ -86,7 +88,7 @@ fn main() {
         body = remove_links(body);
         body = remove_tags(body);
         body = replace_math(body);
-        body = markdown::to_html(&body);
+        body = markdown::to_html_with_options(&body, &options).unwrap();
         let mut note =
             Note::new(basic_model(), vec![&title, &body]).expect("Couldn't generate note");
         note = note.tags(tags);
