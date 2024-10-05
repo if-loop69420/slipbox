@@ -36,13 +36,13 @@ fn replace_math(input: String) -> String {
     let replaced_double = double
         .replace_all(&input, |caps: &Captures| {
             let content = caps.name("content").unwrap();
-            format!("\\[{}\\]", content.as_str())
+            format!("\\[ {} \\]", content.as_str())
         })
         .into_owned();
     let single_replaced = single
         .replace_all(&replaced_double, |caps: &Captures| {
             let content = caps.name("content").unwrap();
-            format!("\\[{}\\]", content.as_str())
+            format!("\\( {} \\)", content.as_str())
         })
         .into_owned();
     let number_symbol_replaced = number.replace_all(&single_replaced, "\\mathbb{$symbol}");
