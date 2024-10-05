@@ -63,7 +63,7 @@ fn remove_tags(input: String) -> String {
 fn main() {
     let config = read_config();
     let mut deck = Deck::new(config.deck_id, &config.deck_name, &config.deck_description);
-    let title_regex = Regex::new(r#"#\s+(?<title>.*|\s+)\n"#).unwrap();
+    let title_regex = Regex::new(r"^#\s+").unwrap();
     let tag_regex = Regex::new(r"#(?<tag>[^#\s]+)[:space:]?").unwrap();
     for i in std::fs::read_dir(config.input_dir).unwrap() {
         let path = i.unwrap().path();
@@ -72,22 +72,12 @@ fn main() {
             path.clone().into_os_string().into_string().unwrap()
         );
         let file_content = std::fs::read_to_string(path).unwrap();
-        let mut title = String::from("");
-        let mut body = String::from("");
-        for (j, line) in file_content.lines().enumerate() {
-            if j == 0 {
-                title = markdown::to_html(
-                    title_regex
-                        .captures(&format!("{}\n", line))
-                        .unwrap()
-                        .name("title")
-                        .unwrap()
-                        .as_str(),
-                );
-            } else {
-                body = format!("{}{}\n", body, line);
-            }
-        }
+        let (title, body) = file_content.split_once('\n').unwrap();
+        let title = markdown::to_html(
+            &title_regex
+                .replace(title, "")
+        );
+        let mut body = body.to_string();
         let tags: Vec<&str> = tag_regex
             .captures_iter(&file_content)
             .map(|x| {
