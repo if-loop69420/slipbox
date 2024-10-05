@@ -75,13 +75,13 @@ fn replace_math(input: String) -> String {
     let replaced_double = MATH_REGEX_DOUBLE
         .replace_all(&input, |caps: &Captures| {
             let content = caps.name("content").unwrap();
-            format!("\\[ {} \\]", content.as_str())
+            format!("\\\\[ {} \\\\]", content.as_str())
         })
         .into_owned();
     let single_replaced = MATH_REGEX_SINGLE
         .replace_all(&replaced_double, |caps: &Captures| {
             let content = caps.name("content").unwrap();
-            format!("\\( {} \\)", content.as_str())
+            format!("\\\\( {} \\\\)", content.as_str())
         })
         .into_owned();
     let number_symbol_replaced = MATH_NUMBER.replace_all(&single_replaced, "\\mathbb{$symbol}");
@@ -101,10 +101,7 @@ fn main() {
     let mut deck = Deck::new(config.deck_id, &config.deck_name, &config.deck_description);
     for i in std::fs::read_dir(config.input_dir).unwrap() {
         let path = i.unwrap().path();
-        println!(
-            "Reading file: {}",
-            path.display()
-        );
+        println!("Reading file: {}", path.display());
         let file_content = std::fs::read_to_string(path).unwrap();
         let note: Note = file_content.parse().unwrap();
         deck.add_note(note.into());

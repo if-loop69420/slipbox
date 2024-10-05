@@ -1,38 +1,38 @@
 <p>Division of two polynomials  works in 2 seperate ways.</p>
 <h2>1. Long Division</h2>
-<p>Say we want to divide ( x^2 - 4x + 2 ) by ( x-2 ) how would be do that?</p>
+<p>Say we want to divide \( x^2 - 4x + 2 \) by \( x-2 \) how would be do that?</p>
 <ol>
-<li>Take the first term (in this case ( x^2 )) and check what factor m you need to multiply the divisor (( x )) by in order for the to equal 0 when subtracted (in this case x)</li>
-<li>Multiply the whole divisor (( x-2 )) by m (( x<em>m-2</em>m ))</li>
+<li>Take the first term (in this case \( x^2 \)) and check what factor m you need to multiply the divisor (\( x \)) by in order for the to equal 0 when subtracted (in this case x)</li>
+<li>Multiply the whole divisor (\( x-2 \)) by m (\( x<em>m-2</em>m \))</li>
 <li>Subtract the result from the polynomial (or switch all signs and at, it's the same)</li>
 <li>Write the next term of the polynomial into the next line (just like with normal long division)</li>
 <li>Repeat step one until there are no terms left.</li>
 </ol>
 <h2>2. Synthetic Division</h2>
-<p>If the divisor is in the form ( x-c ) then synthetic division is possible.
+<p>If the divisor is in the form \( x-c \) then synthetic division is possible.
 Synthetic division works like the following:</p>
 <table>
 <thead>
 <tr>
 <th>c</th>
-<th>( a_n )</th>
-<th>( a_{n-1} )</th>
+<th>\( a_n \)</th>
+<th>\( a_{n-1} \)</th>
 <th>…</th>
-<th>( a_0 )</th>
+<th>\( a_0 \)</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td></td>
 <td></td>
-<td>( r_n*c )</td>
+<td>\( r_n*c \)</td>
 <td></td>
-<td>( r_1*c )</td>
+<td>\( r_1*c \)</td>
 </tr>
 <tr>
 <td></td>
 <td>r_n=a_n</td>
-<td>( r_{n-1}=r_n+a_{n-1} )</td>
+<td>\( r_{n-1}=r_n+a_{n-1} \)</td>
 <td></td>
 <td>$r_n=r_{n-1}*c</td>
 </tr>
