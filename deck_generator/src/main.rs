@@ -53,7 +53,7 @@ fn remove_tags(input: String) -> String {
     static TAG_REGEX: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r#"#[^#\s]+[:space:]?"#).unwrap());
     let tag_regex = TAG_REGEX.clone();
-    tag_regex.replace(&input, "").into_owned()
+    tag_regex.replace_all(&input, "").into_owned()
 }
 
 // Read config.
