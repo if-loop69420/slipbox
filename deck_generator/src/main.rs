@@ -5,10 +5,8 @@ use genanki_rs::{basic_model, Deck};
 use markdown::Options;
 use regex::{Captures, Regex};
 
-const TAG_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"#(?<tag>[^#\s]+)").unwrap());
-const LINK_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"(\[{2}.*?\]{2})"#).unwrap());
+const TAG_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"#(?<tag>[^#\s]+)").unwrap());
+const LINK_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"(\[{2}.*?\]{2})"#).unwrap());
 const MATH_REGEX_DOUBLE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"(\${2})(?<content>.*?)(\${2})"#).unwrap());
 const MATH_REGEX_SINGLE: LazyLock<Regex> =
@@ -57,11 +55,7 @@ impl FromStr for Note {
         body = replace_math(body);
         let options = Options::gfm();
         body = markdown::to_html_with_options(&body, &options).unwrap();
-        Ok(Self {
-            title,
-            body,
-            tags
-        })
+        Ok(Self { title, body, tags })
     }
 }
 
@@ -123,7 +117,7 @@ fn main() {
 mod tests {
     #[test]
     fn test_simple_note() {
-        let data = include_str!("test_data/20240910102356.md");
+        let data = include_str!("../test_data/20240910102356.md");
         // let note = parse_markdown(&data);
     }
 }
