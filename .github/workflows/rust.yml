@@ -22,6 +22,6 @@ jobs:
         path: |
           */target/
     - name: Run anki card generation
-      run: cd deck_generator && cargo build --release && cargo run
+      run: cd deck_generator && cargo build --release && ./target/release/deck_generator
     - uses: stefanzweifel/git-auto-commit-action@v4
         
