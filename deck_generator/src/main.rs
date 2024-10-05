@@ -1,7 +1,6 @@
 use std::{borrow::Borrow, sync::LazyLock};
 
 use genanki_rs::{basic_model, Deck, Note};
-use katex::Opts;
 use regex::{Captures, Regex};
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -34,21 +33,15 @@ fn replace_math(input: String) -> String {
     let double = MATH_REGEX_DOUBLE.clone();
     let single = MATH_REGEX_SINGLE.clone();
     let number = MATH_NUMBER.clone();
-    // static OPTS: LazyLock<Opts> =
-    // LazyLock::new(|| Opts::builder().display_mode(true).build().unwrap());
     let replaced_double = double
         .replace_all(&input, |caps: &Captures| {
-            // println!("At capture {}", caps.name("content").unwrap().as_str());
             let content = caps.name("content").unwrap();
-            // katex::render_with_opts(&content.as_str(), &OPTS.clone()).unwrap()
             format!("\\[{}\\]", content.as_str())
         })
         .into_owned();
     let single_replaced = single
         .replace_all(&replaced_double, |caps: &Captures| {
-            // println!("At capture {}", caps.name("content").unwrap().as_str());
             let content = caps.name("content").unwrap();
-            // katex::render_with_opts(&content.as_str(), &OPTS.clone()).unwrap()
             format!("\\({}\\)", content.as_str())
         })
         .into_owned();
