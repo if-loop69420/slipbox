@@ -18,7 +18,8 @@ fn read_config() -> Config {
 }
 
 fn remove_links(input: String) -> String {
-    static LINK_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"(\[{2}.*\]{2})"#).unwrap());
+    static LINK_REGEX: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r#"(\[{2}.*?\]{2})"#).unwrap());
     let link_regex = LINK_REGEX.clone();
     link_regex.replace_all(&input, "").into_owned()
 }
@@ -73,10 +74,7 @@ fn main() {
         );
         let file_content = std::fs::read_to_string(path).unwrap();
         let (title, body) = file_content.split_once('\n').unwrap();
-        let title = markdown::to_html(
-            &title_regex
-                .replace(title, "")
-        );
+        let title = markdown::to_html(&title_regex.replace(title, ""));
         let mut body = body.to_string();
         let tags: Vec<&str> = tag_regex
             .captures_iter(&file_content)
