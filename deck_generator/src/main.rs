@@ -4,6 +4,17 @@ use genanki_rs::{basic_model, Deck, Note};
 use markdown::Options;
 use regex::{Captures, Regex};
 
+const TAG_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"#(?<tag>[^#\s]+)").unwrap());
+const LINK_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"(\[{2}.*?\]{2})"#).unwrap());
+const MATH_REGEX_DOUBLE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"(\${2})(?<content>.*?)(\${2})"#).unwrap());
+const MATH_REGEX_SINGLE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"(\$)(?<content>.*?)(\$)"#).unwrap());
+const MATH_NUMBER: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"\\(?<symbol>[A-Z]+)"#).unwrap());
+
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct Config {
     input_dir: String,
@@ -19,43 +30,28 @@ fn read_config() -> Config {
 }
 
 fn remove_links(input: String) -> String {
-    static LINK_REGEX: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r#"(\[{2}.*?\]{2})"#).unwrap());
-    let link_regex = LINK_REGEX.clone();
-    link_regex.replace_all(&input, "").into_owned()
+    LINK_REGEX.replace_all(&input, "").into_owned()
 }
 
 fn replace_math(input: String) -> String {
-    static MATH_REGEX_DOUBLE: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r#"(\${2})(?<content>.*?)(\${2})"#).unwrap());
-    static MATH_REGEX_SINGLE: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r#"(\$)(?<content>.*?)(\$)"#).unwrap());
-    static MATH_NUMBER: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r#"\\(?<symbol>[A-Z]+)"#).unwrap());
-    let double = MATH_REGEX_DOUBLE.clone();
-    let single = MATH_REGEX_SINGLE.clone();
-    let number = MATH_NUMBER.clone();
-    let replaced_double = double
+    let replaced_double = MATH_REGEX_DOUBLE
         .replace_all(&input, |caps: &Captures| {
             let content = caps.name("content").unwrap();
             format!("\\[ {} \\]", content.as_str())
         })
         .into_owned();
-    let single_replaced = single
+    let single_replaced = MATH_REGEX_SINGLE
         .replace_all(&replaced_double, |caps: &Captures| {
             let content = caps.name("content").unwrap();
             format!("\\( {} \\)", content.as_str())
         })
         .into_owned();
-    let number_symbol_replaced = number.replace_all(&single_replaced, "\\mathbb{$symbol}");
+    let number_symbol_replaced = MATH_NUMBER.replace_all(&single_replaced, "\\mathbb{$symbol}");
     number_symbol_replaced.to_string()
 }
 
 fn remove_tags(input: String) -> String {
-    static TAG_REGEX: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r#"#[^#\s]+[:space:]?"#).unwrap());
-    let tag_regex = TAG_REGEX.clone();
-    tag_regex.replace_all(&input, "").into_owned()
+    TAG_REGEX.replace_all(&input, "").into_owned()
 }
 
 // Read config.
@@ -66,7 +62,6 @@ fn main() {
     let config = read_config();
     let mut deck = Deck::new(config.deck_id, &config.deck_name, &config.deck_description);
     let title_regex = Regex::new(r"^#\s+").unwrap();
-    let tag_regex = Regex::new(r"#(?<tag>[^#\s]+)").unwrap();
     let options = Options::gfm();
     for i in std::fs::read_dir(config.input_dir).unwrap() {
         let path = i.unwrap().path();
@@ -78,7 +73,7 @@ fn main() {
         let (title, body) = file_content.split_once('\n').unwrap();
         let title = markdown::to_html(&title_regex.replace(title, ""));
         let mut body = body.to_string();
-        let tags: Vec<&str> = tag_regex
+        let tags: Vec<&str> = TAG_REGEX
             .captures_iter(&file_content)
             .map(|x| {
                 let i_want = x.name("tag").unwrap();
