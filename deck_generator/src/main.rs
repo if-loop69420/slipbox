@@ -49,6 +49,13 @@ fn replace_math(input: String) -> String {
     number_symbol_replaced.to_string()
 }
 
+fn remove_tags(input: String) -> String {
+    static TAG_REGEX: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r#"#[^#\s]+[:space:]?"#).unwrap());
+    let tag_regex = TAG_REGEX.clone();
+    tag_regex.replace(&input, "").into_owned()
+}
+
 // Read config.
 // Go through all input files. Get the title with regex. Get the rest of the content with a regex. Generate new anki note.
 // Put note into deck.
@@ -89,6 +96,7 @@ fn main() {
             })
             .collect();
         body = remove_links(body);
+        body = remove_tags(body);
         body = replace_math(body);
         body = markdown::to_html(&body);
         let mut note =
