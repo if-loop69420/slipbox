@@ -57,7 +57,7 @@ fn main() {
     let config = read_config();
     let mut deck = Deck::new(config.deck_id, &config.deck_name, &config.deck_description);
     let title_regex = Regex::new(r#"#\s+(?<title>.*|\s+)\n"#).unwrap();
-    let tag_regex = Regex::new(r#"(#(?<tag>[^#])+[:space:]?)"#).unwrap();
+    let tag_regex = Regex::new(r#"(#(?<tag>[^#]+)[:space:]?)"#).unwrap();
     for i in std::fs::read_dir(config.input_dir).unwrap() {
         let path = i.unwrap().path();
         println!(
