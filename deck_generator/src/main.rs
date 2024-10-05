@@ -14,6 +14,7 @@ const MATH_REGEX_SINGLE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"(\$)(?<content>.*?)(\$)"#).unwrap());
 const MATH_NUMBER: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"\\(?<symbol>[A-Z]+)"#).unwrap());
+const TITLE_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^#\s+").unwrap());
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct Config {
@@ -54,6 +55,28 @@ fn remove_tags(input: String) -> String {
     TAG_REGEX.replace_all(&input, "").into_owned()
 }
 
+fn parse_markdown(markdown: &str) -> Note {
+    let (title, body) = markdown.split_once('\n').unwrap();
+    let title = markdown::to_html(&TITLE_REGEX.replace(title, ""));
+    let mut body = body.to_string();
+    let tags: Vec<&str> = TAG_REGEX
+        .captures_iter(&markdown)
+        .map(|x| {
+            let i_want = x.name("tag").unwrap();
+            i_want.as_str()
+        })
+        .collect();
+    body = remove_links(body);
+    body = remove_tags(body);
+    body = replace_math(body);
+    let options = Options::gfm();
+    body = markdown::to_html_with_options(&body, &options).unwrap();
+    let mut note =
+        Note::new(basic_model(), vec![&title, &body]).expect("Couldn't generate note");
+    note = note.tags(tags);
+    note
+}
+
 // Read config.
 // Go through all input files. Get the title with regex. Get the rest of the content with a regex. Generate new anki note.
 // Put note into deck.
@@ -61,8 +84,6 @@ fn remove_tags(input: String) -> String {
 fn main() {
     let config = read_config();
     let mut deck = Deck::new(config.deck_id, &config.deck_name, &config.deck_description);
-    let title_regex = Regex::new(r"^#\s+").unwrap();
-    let options = Options::gfm();
     for i in std::fs::read_dir(config.input_dir).unwrap() {
         let path = i.unwrap().path();
         println!(
@@ -70,23 +91,7 @@ fn main() {
             path.clone().into_os_string().into_string().unwrap()
         );
         let file_content = std::fs::read_to_string(path).unwrap();
-        let (title, body) = file_content.split_once('\n').unwrap();
-        let title = markdown::to_html(&title_regex.replace(title, ""));
-        let mut body = body.to_string();
-        let tags: Vec<&str> = TAG_REGEX
-            .captures_iter(&file_content)
-            .map(|x| {
-                let i_want = x.name("tag").unwrap();
-                i_want.as_str()
-            })
-            .collect();
-        body = remove_links(body);
-        body = remove_tags(body);
-        body = replace_math(body);
-        body = markdown::to_html_with_options(&body, &options).unwrap();
-        let mut note =
-            Note::new(basic_model(), vec![&title, &body]).expect("Couldn't generate note");
-        note = note.tags(tags);
+        let note = parse_markdown(&file_content);
         deck.add_note(note);
     }
     deck.write_to_file(&format!("{}/{}.apkg", config.output_dir, config.deck_name))
