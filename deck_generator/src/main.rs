@@ -57,6 +57,7 @@ fn main() {
     let config = read_config();
     let mut deck = Deck::new(config.deck_id, &config.deck_name, &config.deck_description);
     let title_regex = Regex::new(r#"#\s+(?<title>.*|\s+)\n"#).unwrap();
+    let tag_regex = Regex::new(r#"(#+\S+[:space]?)"#).unwrap();
     for i in std::fs::read_dir(config.input_dir).unwrap() {
         let path = i.unwrap().path();
         println!(
@@ -80,12 +81,20 @@ fn main() {
                 body = format!("{}{}\n", body, line);
             }
         }
+        let tags: Vec<&str> = tag_regex
+            .captures_iter(&file_content)
+            .map(|x| {
+                let (_, [i_want]) = x.extract();
+                i_want
+            })
+            .collect();
         body = remove_links(body);
         body = replace_math(body);
         body = markdown::to_html(&body);
-        deck.add_note(
-            Note::new(basic_model(), vec![&title, &body]).expect("Couldn't generate note"),
-        );
+        let mut note =
+            Note::new(basic_model(), vec![&title, &body]).expect("Couldn't generate note");
+        note = note.tags(tags);
+        deck.add_note(note);
     }
     deck.write_to_file(&format!("{}/{}.apkg", config.output_dir, config.deck_name))
         .unwrap();
