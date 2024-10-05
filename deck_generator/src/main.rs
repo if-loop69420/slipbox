@@ -1,6 +1,7 @@
+use std::str::FromStr;
 use std::sync::LazyLock;
 
-use genanki_rs::{basic_model, Deck, Note};
+use genanki_rs::{basic_model, Deck};
 use markdown::Options;
 use regex::{Captures, Regex};
 
@@ -30,6 +31,48 @@ fn read_config() -> Config {
     serde_json::from_str(&config_file).unwrap()
 }
 
+#[derive(serde::Deserialize, serde::Serialize)]
+pub struct Note {
+    title: String,
+    body: String,
+    tags: Vec<String>,
+}
+
+impl FromStr for Note {
+    type Err = ();
+
+    fn from_str(markdown: &str) -> Result<Self, Self::Err> {
+        let (title, body) = markdown.split_once('\n').unwrap();
+        let title = markdown::to_html(&TITLE_REGEX.replace(title, ""));
+        let mut body = body.to_string();
+        let tags = TAG_REGEX
+            .captures_iter(&markdown)
+            .map(|x| {
+                let i_want = x.name("tag").unwrap();
+                i_want.as_str().to_string()
+            })
+            .collect();
+        body = remove_links(body);
+        body = remove_tags(body);
+        body = replace_math(body);
+        let options = Options::gfm();
+        body = markdown::to_html_with_options(&body, &options).unwrap();
+        Ok(Self {
+            title,
+            body,
+            tags
+        })
+    }
+}
+
+impl Into<genanki_rs::Note> for Note {
+    fn into(self) -> genanki_rs::Note {
+        genanki_rs::Note::new(basic_model(), vec![&self.title, &self.body])
+            .expect("Couldn't generate note")
+            .tags(self.tags)
+    }
+}
+
 fn remove_links(input: String) -> String {
     LINK_REGEX.replace_all(&input, "").into_owned()
 }
@@ -55,28 +98,6 @@ fn remove_tags(input: String) -> String {
     TAG_REGEX.replace_all(&input, "").into_owned()
 }
 
-fn parse_markdown(markdown: &str) -> Note {
-    let (title, body) = markdown.split_once('\n').unwrap();
-    let title = markdown::to_html(&TITLE_REGEX.replace(title, ""));
-    let mut body = body.to_string();
-    let tags: Vec<&str> = TAG_REGEX
-        .captures_iter(&markdown)
-        .map(|x| {
-            let i_want = x.name("tag").unwrap();
-            i_want.as_str()
-        })
-        .collect();
-    body = remove_links(body);
-    body = remove_tags(body);
-    body = replace_math(body);
-    let options = Options::gfm();
-    body = markdown::to_html_with_options(&body, &options).unwrap();
-    let mut note =
-        Note::new(basic_model(), vec![&title, &body]).expect("Couldn't generate note");
-    note = note.tags(tags);
-    note
-}
-
 // Read config.
 // Go through all input files. Get the title with regex. Get the rest of the content with a regex. Generate new anki note.
 // Put note into deck.
@@ -91,9 +112,18 @@ fn main() {
             path.clone().into_os_string().into_string().unwrap()
         );
         let file_content = std::fs::read_to_string(path).unwrap();
-        let note = parse_markdown(&file_content);
-        deck.add_note(note);
+        let note: Note = file_content.parse().unwrap();
+        deck.add_note(note.into());
     }
     deck.write_to_file(&format!("{}/{}.apkg", config.output_dir, config.deck_name))
         .unwrap();
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_simple_note() {
+        let data = include_str!("test_data/20240910102356.md");
+        // let note = parse_markdown(&data);
+    }
 }
