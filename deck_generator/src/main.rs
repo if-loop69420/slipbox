@@ -7,12 +7,10 @@ use regex::{Captures, Regex};
 
 const TAG_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"#(?<tag>[^#\s]+)").unwrap());
 const LINK_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"(\[{2}.*?\]{2})"#).unwrap());
-const MATH_REGEX_DOUBLE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"(\${2})(?<content>.*?)(\${2})"#).unwrap());
-const MATH_REGEX_SINGLE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"(\$)(?<content>.*?)(\$)"#).unwrap());
-const MATH_NUMBER: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"\\(?<symbol>[A-Z]+)"#).unwrap());
+const MATH_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(
+        r"(:?(\${2})(?<content_double>.*?)(\${2}))|(:?(\$)(?<content_single>.*?)(\$))|(:?\\(?<symbol>[A-Z]+))"
+    ).unwrap());
 const TITLE_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^#\s+").unwrap());
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -72,20 +70,20 @@ fn remove_links(input: String) -> String {
 }
 
 fn replace_math(input: String) -> String {
-    let replaced_double = MATH_REGEX_DOUBLE
+    MATH_REGEX
         .replace_all(&input, |caps: &Captures| {
-            let content = caps.name("content").unwrap();
-            format!("\\\\[ {} \\\\]", content.as_str())
+            if let Some(content) = caps.name("content_double") {
+                format!("\\\\[ {} \\\\]", content.as_str())
+            } else if let Some(content) = caps.name("content_single") {
+                format!("\\\\( {} \\\\)", content.as_str())
+            } else if let Some(content) = caps.name("symbol") {
+                format!("\\\\mathbb{}", content.as_str())
+            } else {
+                unreachable!()
+            }
         })
-        .into_owned();
-    let single_replaced = MATH_REGEX_SINGLE
-        .replace_all(&replaced_double, |caps: &Captures| {
-            let content = caps.name("content").unwrap();
-            format!("\\\\( {} \\\\)", content.as_str())
-        })
-        .into_owned();
-    let number_symbol_replaced = MATH_NUMBER.replace_all(&single_replaced, "\\mathbb{$symbol}");
-    number_symbol_replaced.to_string()
+        .into_owned()
+        .to_string()
 }
 
 fn remove_tags(input: String) -> String {
