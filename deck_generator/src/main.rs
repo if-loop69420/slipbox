@@ -115,14 +115,27 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use crate::Note;
+    use super::*;
 
-    #[test]
-    fn test_simple_note() {
-        let data = include_str!("../test_data/20240910102356.md");
-        let note: Note = data.parse().unwrap();
-        assert_eq!(note.title, "<p>What is a proof?</p>");
-        assert_eq!(note.body, "<p>A proof is a formal way of expressing a statement to be true based on logic  and reasoning.\nFor this purpose proofs make use of axioms  on which they base their reasoning.</p>\n<p>&quot;Mathematics as a field of science tries to scientifically prove the most facts about the universe while using the smallest possible number of axioms&quot; - Einstein (probably not a word for word quote)</p>\n");
-        assert_eq!(note.tags, vec!["math", "proofs", "logic"]);
+    macro_rules! note_conversion_tests {
+        ($directory:literal { $($name:ident => $name_str:literal,)* }) => {
+            $(
+                #[test]
+                fn $name() {
+                    let data = include_str!(concat!($directory, "/", $name_str, "/input.md"));
+                    let note: Note = data.parse().unwrap();
+                    assert_eq!(note.title, include_str!(concat!($directory, "/", $name_str, "/title.html")));
+                    assert_eq!(note.body, include_str!(concat!($directory, "/", $name_str, "/body.html")));
+                    assert_eq!(note.tags, include_str!(concat!($directory, "/", $name_str, "/tags.txt")).split('\n').collect::<Vec<&str>>());
+                }
+            )*
+        };
     }
+
+    note_conversion_tests!(
+        "test_data" {
+            simple_note_test => "simple",
+            complex_note_test => "complex",
+        }
+    );
 }
