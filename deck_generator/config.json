@@ -1,0 +1,7 @@
+{
+  "input_dir": "../notes",
+  "output_dir": "../anki_cards",
+  "deck_id": 69696969,
+  "deck_name": "slipbox_notes",
+  "deck_description": "Notes from my Zettelkasten"
+}
