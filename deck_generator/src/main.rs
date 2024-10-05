@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, sync::LazyLock};
+use std::sync::LazyLock;
 
 use genanki_rs::{basic_model, Deck, Note};
 use regex::{Captures, Regex};

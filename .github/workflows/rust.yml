@@ -21,6 +21,7 @@ jobs:
     - uses: stefanzweifel/git-auto-commit-action@v4
     - uses: actions/cache@v4.1.0
       with: 
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/Cargo.toml') }}
         path: |
           */target/
         
