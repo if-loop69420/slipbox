@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use std::sync::LazyLock;
+use std::{fs::FileType, str::FromStr};
 
 use genanki_rs::{basic_model, Deck};
 use markdown::Options;
@@ -99,10 +99,15 @@ fn main() {
     let config = read_config();
     let mut deck = Deck::new(config.deck_id, &config.deck_name, &config.deck_description);
     for i in std::fs::read_dir(config.input_dir).unwrap() {
-        let path = i.unwrap().path();
+        let file = i.unwrap();
+        let file_name: String = file.file_name().into_string().unwrap();
+        let path = file.path();
         println!("Reading file: {}", path.display());
         let file_content = std::fs::read_to_string(path).unwrap();
-        if file_content.is_empty() {
+        if file_content.is_empty()
+            || file_content.lines().count() <= 1
+            || !file_name.contains(".md")
+        {
             continue;
         }
         let note: Note = file_content.parse().unwrap();
