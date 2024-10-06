@@ -111,7 +111,9 @@ fn main() {
             continue;
         }
         let note: Note = file_content.parse().unwrap();
-        deck.add_note(note.into());
+        let mut note: genanki_rs::Note = note.into();
+        note = note.guid(file_name);
+        deck.add_note(note);
     }
     deck.write_to_file(&format!("{}/{}.apkg", config.output_dir, config.deck_name))
         .unwrap();
