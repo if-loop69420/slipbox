@@ -7,10 +7,11 @@ use regex::{Captures, Regex};
 
 const TAG_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"#(?<tag>[^#\s]+)").unwrap());
 const LINK_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"(\[{2}.*?\]{2})"#).unwrap());
-const MATH_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(
+const MATH_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(
         r"(:?(\${2})(?<content_double>.*?)(\${2}))|(:?(\$)(?<content_single>.*?)(\$))|(:?\\(?<symbol>[A-Z]+))"
-    ).unwrap());
+    ).unwrap()
+});
 const TITLE_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^#\s+").unwrap());
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -101,6 +102,9 @@ fn main() {
         let path = i.unwrap().path();
         println!("Reading file: {}", path.display());
         let file_content = std::fs::read_to_string(path).unwrap();
+        if file_content.is_empty() {
+            continue;
+        }
         let note: Note = file_content.parse().unwrap();
         deck.add_note(note.into());
     }
