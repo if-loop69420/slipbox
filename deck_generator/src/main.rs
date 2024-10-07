@@ -78,7 +78,7 @@ fn replace_math(input: String) -> String {
             } else if let Some(content) = caps.name("content_single") {
                 format!("\\\\( {} \\\\)", content.as_str())
             } else if let Some(content) = caps.name("symbol") {
-                format!("\\\\mathbb{{{}}}", content.as_str())
+                format!("\\\\mathbb{{ {} }}", content.as_str())
             } else {
                 unreachable!()
             }
