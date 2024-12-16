@@ -8,9 +8,8 @@ use regex::{Captures, Regex};
 const TAG_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"#(?<tag>[^#\s]+)").unwrap());
 const LINK_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"(\[{2}.*?\]{2})"#).unwrap());
 const MATH_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(
-        r"(:?(\${2}\s*)(?<content_double>.*?)(\${2}))|(:?(\$\s*)(?<content_single>.*?)(\$))"
-    ).unwrap()
+    Regex::new(r"(:?(\${2}\s*)(?<content_double>.*?)(\${2}))|(:?(\$\s*)(?<content_single>.*?)(\$))")
+        .unwrap()
 });
 const TITLE_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^#\s+").unwrap());
 
@@ -76,9 +75,9 @@ fn replace_math(input: String) -> String {
             if let Some(content) = caps.name("content_double") {
                 format!("[$]{}[/$]", content.as_str())
             } else if let Some(content) = caps.name("content_single") {
-                format!("[$]{}[/$])", content.as_str())
+                format!("[$]{}[/$]", content.as_str())
             // } else if let Some(content) = caps.name("symbol") {
-                // format!("\\\\mathbb{{ {} }}", content.as_str())
+            // format!("\\\\mathbb{{ {} }}", content.as_str())
             } else {
                 unreachable!()
             }
@@ -130,9 +129,9 @@ mod tests {
                 fn $name() {
                     let data = include_str!(concat!($directory, "/", $name_str, "/input.md"));
                     let note: Note = data.parse().unwrap();
-                    assert_eq!(note.title, include_str!(concat!($directory, "/", $name_str, "/title.html")));
+                    assert_eq!(note.title, include_str!(concat!($directory, "/", $name_str, "/title.html")).trim());
                     assert_eq!(note.body, include_str!(concat!($directory, "/", $name_str, "/body.html")));
-                    assert_eq!(note.tags, include_str!(concat!($directory, "/", $name_str, "/tags.txt")).split('\n').collect::<Vec<&str>>());
+                    assert_eq!(note.tags, include_str!(concat!($directory, "/", $name_str, "/tags.txt")).trim().split('\n').collect::<Vec<&str>>());
                 }
             )*
         };
