@@ -8,7 +8,7 @@ use regex::{Captures, Regex};
 const TAG_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"#(?<tag>[^#\s]+)").unwrap());
 const LINK_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"(\[{2}.*?\]{2})"#).unwrap());
 const MATH_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(:?(\${2}\s*)(?<content_double>.*?)(\${2}))|(:?(\$\s*)(?<content_single>.*?)(\$))")
+    Regex::new(r"(:?(\${2}\s*)(?<content_double>.*?)(\${2}))|(:?(\$\s*)(?<content_single>.*?)(\$))|(:?\\(?<set>[A-Z]+))")
         .unwrap()
 });
 const TITLE_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^#\s+").unwrap());
@@ -76,8 +76,8 @@ fn replace_math(input: String) -> String {
                 format!("[$]{}[/$]", content.as_str())
             } else if let Some(content) = caps.name("content_single") {
                 format!("[$]{}[/$]", content.as_str())
-            // } else if let Some(content) = caps.name("symbol") {
-            // format!("\\\\mathbb{{ {} }}", content.as_str())
+            } else if let Some(content) = caps.name("set") {
+                format!("\\\\mathbb{{ {} }}", content.as_str())
             } else {
                 unreachable!()
             }
