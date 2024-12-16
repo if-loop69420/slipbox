@@ -1,4 +1,0 @@
-math
-rules
-numbers
-complexNumbers
